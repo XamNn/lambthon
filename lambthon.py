@@ -3,6 +3,10 @@ import re
 letre = re.compile(r"^(\w+)=([^=].*)")
 whitespacere = re.compile("\s+")
 lambdare = re.compile(r"\^(\w+)\.")
+escapedidenre = re.compile(r"\$(\w+)")
+idenre = re.compile(r"(?<![\$\w])(\w+)")
+
+idenprefix = "lmb_"
 
 decls = []
 names = {}
@@ -32,7 +36,10 @@ def tidystr(val):
     replace("= ", "=")
 
 def makestr(val):
-    val = val.swapcase()
+    for match in reversed(list(idenre.finditer(val))):
+        val = val[:match.start()] + idenprefix + match.group(1)
+    for match in reversed(list(escapedidenre.finditer(val))):
+        val = val[:match.start()] + match.group(1)
     for match in reversed(list(lambdare.finditer(val))):
         val = val[:match.start()] + "lambda\t" + match.group(1) + ":(" + val[match.end():] + ")"
     val = "(" + val
@@ -49,7 +56,10 @@ def process(text):
     if (text == "exit"):
         raise SystemExit
     if (text.startswith("load ")):
-        with open(text[5:]) as f:
+        file = text[5:]
+        if "." not in file:
+            file += ".lambthon"
+        with open(file) as f:
             for line in f:
                 process(line)
         return
@@ -63,7 +73,7 @@ def process(text):
     letmatch = letre.match(text)
     try:
         if letmatch:
-            name = letmatch.group(1)
+            name = idenprefix + letmatch.group(1)
             try:
                 del names[name]
             except: pass
@@ -81,7 +91,7 @@ def process(text):
                 else:
                     val = decl[1]
                 names[name] = declindex
-            globals()[name.swapcase()]=val
+            globals()[name]=val
         else:
             val = eval(makestr(text))
             valstr = ""
@@ -101,7 +111,7 @@ def process(text):
     except SyntaxError:
         print("Syntax Error")
     except NameError as e:
-        print(str(e).swapcase())
+        print(str(e).replace("' ", "\" ").replace("'" + idenprefix, "\"").replace("'", "\"$"))
     except BaseException as e:
         print(e)
 
