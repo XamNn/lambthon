@@ -1,12 +1,10 @@
 import re
 
 letre = re.compile(r"^(\w+)=([^=].*)")
-whitespacere = re.compile("\s+")
+whitespacere = re.compile(" +")
 lambdare = re.compile(r"\^(\w+)\.")
 escapedidenre = re.compile(r"\$([^\d\W]\w*)")
 idenre = re.compile(r"(?<![\$\w])([^\d\W]\w*)")
-
-idenprefix = "lmb_"
 
 decls = []
 names = {}
@@ -27,12 +25,6 @@ def getnames(i):
             yield name
     return
 
-def displayformatstr(s):
-    if s.startswith("lmb_"):
-        return s[4:]
-    else:
-        return "$" + s
-
 def tidystr(val):
     return whitespacere.sub(" ", val.strip()).\
     replace("^ ", "^").\
@@ -42,10 +34,6 @@ def tidystr(val):
     replace("= ", "=")
 
 def makestr(val):
-    for match in reversed(list(idenre.finditer(val))):
-        val = val[:match.start()] + idenprefix + match.group(1) + val[match.end():]
-    for match in reversed(list(escapedidenre.finditer(val))):
-        val = val[:match.start()] + match.group(1) + val[match.end():]
     for match in reversed(list(lambdare.finditer(val))):
         val = val[:match.start()] + "lambda\t" + match.group(1) + ":(" + val[match.end():] + ")"
     val = "(" + val
@@ -72,7 +60,7 @@ def process(text):
                 process(line)
         return
     if text.startswith("!! "):
-        exec(text[3:])
+        exec(text[3:], globals())
         return
     if len(text) == 0:
         return
@@ -81,7 +69,7 @@ def process(text):
     letmatch = letre.match(text)
     try:
         if letmatch:
-            name = idenprefix + letmatch.group(1)
+            name = letmatch.group(1)
             try:
                 del names[name]
             except: pass
@@ -110,7 +98,7 @@ def process(text):
                 if decl != None:
                     valstr = decl[0]
                     for name in getnames(declindex):
-                        valstr += " = " + displayformatstr(name)
+                        valstr += " = " + name
 
             if (valstr == ""):
                 valstr = str(val)
@@ -119,7 +107,7 @@ def process(text):
     except SyntaxError:
         print("Syntax Error")
     except NameError as e:
-        print(str(e).replace("' ", "\" ").replace("'" + idenprefix, "\"").replace("'", "\"$"))
+        print(e)
     except BaseException as e:
         print(e)
 
