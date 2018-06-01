@@ -1,0 +1,6 @@
+print = ^x. x "True" "False"
+true = ^x. ^y. x
+false = ^x. ^y. y
+not = ^x. x false true
+or = ^x.^y. x true y
+xor = ^x.^y. x (not y) y
