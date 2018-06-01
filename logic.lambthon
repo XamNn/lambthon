@@ -1,6 +1,8 @@
-print = ^x. x "True" "False"
-true = ^x. ^y. x
-false = ^x. ^y. y
-not = ^x. x false true
-or = ^x.^y. x true y
-xor = ^x.^y. x (not y) y
+# defines some logical operations
+true = ^x.^y.x
+false = ^x.^y.y
+not = ^x.x false true
+and = ^x.^y.x y false
+or = ^x.^y.x true y
+xor = ^x.^y.x (not y) y
+xnor = ^x.^y.x y (not y)
