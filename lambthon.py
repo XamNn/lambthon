@@ -3,8 +3,8 @@ import re
 letre = re.compile(r"^(\w+)=([^=].*)")
 whitespacere = re.compile("\s+")
 lambdare = re.compile(r"\^(\w+)\.")
-escapedidenre = re.compile(r"\$(\w+)")
-idenre = re.compile(r"(?<![\$\w])(\w+)")
+escapedidenre = re.compile(r"\$([^\d\W]\w*)")
+idenre = re.compile(r"(?<![\$\w])([^\d\W]\w*)")
 
 idenprefix = "lmb_"
 
@@ -27,6 +27,12 @@ def getnames(i):
             yield name
     return
 
+def displayformatstr(s):
+    if s.startswith("lmb_"):
+        return s[4:]
+    else:
+        return "$" + s
+
 def tidystr(val):
     return whitespacere.sub(" ", val.strip()).\
     replace("^ ", "^").\
@@ -37,9 +43,9 @@ def tidystr(val):
 
 def makestr(val):
     for match in reversed(list(idenre.finditer(val))):
-        val = val[:match.start()] + idenprefix + match.group(1)
+        val = val[:match.start()] + idenprefix + match.group(1) + val[match.end():]
     for match in reversed(list(escapedidenre.finditer(val))):
-        val = val[:match.start()] + match.group(1)
+        val = val[:match.start()] + match.group(1) + val[match.end():]
     for match in reversed(list(lambdare.finditer(val))):
         val = val[:match.start()] + "lambda\t" + match.group(1) + ":(" + val[match.end():] + ")"
     val = "(" + val
@@ -53,6 +59,8 @@ def makestr(val):
     return val.replace("\t", " ") + ")"
 
 def process(text):
+    if (text.startswith("#")):
+        return
     if (text == "exit"):
         raise SystemExit
     if (text.startswith("load ")):
@@ -102,7 +110,7 @@ def process(text):
                 if decl != None:
                     valstr = decl[0]
                     for name in getnames(declindex):
-                        valstr += " = " + name
+                        valstr += " = " + displayformatstr(name)
 
             if (valstr == ""):
                 valstr = str(val)
