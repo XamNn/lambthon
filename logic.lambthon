@@ -1,8 +1,8 @@
 # defines some logical operations
 true = ^x.^y.x
 false = ^x.^y.y
-not = ^x.x false true
-and = ^x.^y.x y false
-or = ^x.^y.x true y
-xor = ^x.^y.x (not y) y
-xnor = ^x.^y.x y (not y)
+notf = ^x.x false true
+andf = ^x.^y.x y false
+orf = ^x.^y.x true y
+xor = ^x.^y.x (notf y) y
+xnor = ^x.^y.x y (notf y)
